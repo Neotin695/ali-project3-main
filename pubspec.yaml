@@ -47,6 +47,9 @@ dependencies:
   fluttertoast: ^8.2.1
   email_validator: ^2.1.17
   firebase_storage: ^11.2.0
+  permission_handler: ^10.2.0
+  equatable: ^2.0.5
+  geocoding: ^2.1.0
 
 dev_dependencies:
   flutter_test:

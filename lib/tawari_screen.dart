@@ -5,7 +5,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:project2/Screens/page1.dart';
+import 'package:project2/address_model,.dart';
+import 'package:project2/location_service.dart';
 
 class TawariScreen extends StatefulWidget {
   final String title;
@@ -16,16 +19,36 @@ class TawariScreen extends StatefulWidget {
   State<TawariScreen> createState() => _TawariScreenState();
 }
 
-
 class _TawariScreenState extends State<TawariScreen> {
-  XFile? _image;
+  String image = '';
   final imagepicker = ImagePicker();
   final problemController = TextEditingController();
   bool isLoading = false;
 
+  AddressModel currentLocation =
+      const AddressModel(country: '', name: '', postalCode: '');
+  AddressModel emptyLocation =
+      const AddressModel(country: '', name: '', postalCode: '');
 
-  uploadimage() async {
-    var Pickerimage = await imagepicker.getImage(source: ImageSource.camera);
+  Future<void> uploadimage(ImageSource source) async {
+    final img = await imagepicker.pickImage(source: source);
+    if (img != null) {
+      image = img.path;
+      print(img.path);
+    } else {
+      image = '';
+    }
+  }
+
+  @override
+  void initState() {
+    var status = Permission.location.request().then((value) {
+      if (value.isDenied) {
+        Permission.location.request();
+      }
+    });
+
+    super.initState();
   }
 
   @override
@@ -36,144 +59,136 @@ class _TawariScreenState extends State<TawariScreen> {
         elevation: 0,
         title: Text(
           widget.title,
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back,
             color: Colors.cyan,
           ),
         ),
       ),
-      body: ListView(
-        children: [
-          Container(
-            margin: EdgeInsets.all(15),
-            child: TextFormField(
-              controller: problemController,
-              textAlign: TextAlign.right,
-              maxLines: 15,
-              decoration: InputDecoration(
-                  hintText: "كتابة المشكلة",
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20))),
-            ),
-          ),
-          SizedBox(
-            height: 12,
-          ),
-          TextButton.icon(
-              onPressed: uploadimage,
-              icon: Icon(Icons.add_a_photo),
-              label: Text('الكاميرا')),
-          SizedBox(
-            height: 12,
-          ),
-          Container(
-            padding: EdgeInsets.all(20),
-            child: ElevatedButton(
-              onPressed: () async {
-                final position = await _determinePosition();
-                position.latitude;
-                position.longitude;
-              },
-              child: Text('Send My Location'),
-              style: ElevatedButton.styleFrom(
-                primary: Color(0xFF00B8D4),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.all(15),
+              child: TextFormField(
+                controller: problemController,
+                textAlign: TextAlign.right,
+                maxLines: 15,
+                decoration: InputDecoration(
+                    hintText: "كتابة المشكلة",
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20))),
               ),
             ),
-          ),
-          isLoading
-              ? CircularProgressIndicator()
-              : Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(45)),
-            width: MediaQuery.of(context).size.width*0.8,
-            height: 60,
-            child: ElevatedButton(
-              onPressed: () {
-                _uploadUserData();
-              },
-              child: Text('ارسال البلاغ ',
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                ),),
+            const SizedBox(
+              height: 12,
             ),
-          ),
-        ],
+            TextButton.icon(
+                onPressed: () async => await uploadimage(ImageSource.camera),
+                icon: const Icon(Icons.add_a_photo),
+                label: const Text('الكاميرا')),
+            const SizedBox(
+              height: 12,
+            ),
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: ElevatedButton(
+                onPressed: () async {
+                  currentLocation =
+                      await LocationService().getCurrentLocation();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00B8D4),
+                ),
+                child: const Text('Send My Location'),
+              ),
+            ),
+            isLoading
+                ? const CircularProgressIndicator()
+                : Container(
+                    decoration:
+                        BoxDecoration(borderRadius: BorderRadius.circular(45)),
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    height: 60,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (problemController.text.isNotEmpty) {
+                          _uploadUserData();
+                        }
+                      },
+                      child: const Text(
+                        'ارسال البلاغ ',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+          ],
+        ),
       ),
     );
   }
 
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
-
-    return await Geolocator.getCurrentPosition();
-  }
-  Future<void> uploadImage() async {
-    // Create a storage reference from our app
+  Future<String> uploadImage() async {
     final storageRef = FirebaseStorage.instance
         .ref()
         .child('images/${DateTime.now().millisecondsSinceEpoch}');
 
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final snanpshot = await storageRef.putFile(File(image));
 
-    File file = File(_image!.path);
-
-    await storageRef.putFile(file);
-
-    final url = await storageRef.getDownloadURL();
-
-    FirebaseFirestore.instance.collection('users').doc(uid).set(
-      {
-        'profile_picture': url,
-      },
-      SetOptions(merge: true),
-    );
+    if (snanpshot.state == TaskState.running) {
+      isLoading = true;
+      setState(() {});
+      return '';
+    } else if (snanpshot.state == TaskState.success) {
+      return await storageRef.getDownloadURL();
+    }
+    return '';
   }
 
   void _uploadUserData() async {
-    setState(() {
-      isLoading = true;
-    });
-    await uploadImage();
+    final url = await uploadImage();
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
-    await FirebaseFirestore.instance.collection('users').doc(uid).set(
-      {
-        'كتابةالمشكلة' :problemController.text,
-      },
-      SetOptions(merge: true),
-    );
+    final userName = (await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(uid)
+        .get())['Full Name'] as String;
 
-    setState(() {
+    if (userName.isNotEmpty && currentLocation != emptyLocation) {
+      if (url.isNotEmpty) {
+        await FirebaseFirestore.instance.collection('requests').doc().set(
+          {
+            'location': currentLocation.toMap(),
+            'userName': userName,
+            'problem_desc': problemController.text,
+            'problem_img': url,
+          },
+          SetOptions(merge: true),
+        ).then((value) => Navigator.push(
+            context, MaterialPageRoute(builder: (context) => HomeScreen())));
+      }
+
       isLoading = false;
-    });
- Navigator.push(context, MaterialPageRoute(builder: (context)=> HomeScreen()));
+      setState(() {});
+    }
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
   }
 }
-

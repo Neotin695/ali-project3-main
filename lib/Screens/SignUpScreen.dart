@@ -1,12 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:email_validator/email_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_phone_auth_handler/firebase_phone_auth_handler.dart';
-import 'package:project2/Screens/verify.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -28,7 +24,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
 
   usersCollection() {
-    FirebaseFirestore.instance.collection("Users").add({
+    FirebaseFirestore.instance
+        .collection("Users")
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .set({
       "Full Name": _fullNameController.text,
       "E-mail": _emilController.text,
       "Block": _blockController.text,
@@ -45,13 +44,12 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future signUp() async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance
+      await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
             email: _emilController.text.trim(),
             password: _passwordController.text.trim(),
           )
           .then((value) => usersCollection());
-      // .then((value) =>  VerifyScreen());
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -130,6 +128,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             if (text == null || text.isEmpty) {
                               return "Enter Your Name";
                             }
+                            return null;
                           },
                           controller: _fullNameController,
                           keyboardType: TextInputType.text,
@@ -142,21 +141,20 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(height: 10),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 25),
-                      child: Container(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: TextFormField(
-                            validator: (value) {
-                              if (value == null ||
-                                  value.isEmpty ||
-                                  !value!.contains("@")) {
-                                return "Enter Your E-mail";
-                              }
-                            },
-                            controller: _emilController,
-                            decoration: const InputDecoration(
-                              hintText: "E-mail",
-                            ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: TextFormField(
+                          validator: (value) {
+                            if (value == null ||
+                                value.isEmpty ||
+                                !value.contains("@")) {
+                              return "Enter Your E-mail";
+                            }
+                            return null;
+                          },
+                          controller: _emilController,
+                          decoration: const InputDecoration(
+                            hintText: "E-mail",
                           ),
                         ),
                       ),
@@ -164,20 +162,19 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(height: 10),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 25),
-                      child: Container(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: TextFormField(
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return "Enter Your Password";
-                              }
-                            },
-                            controller: _passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(
-                              hintText: "Password",
-                            ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: TextFormField(
+                          validator: (text) {
+                            if (text == null || text.isEmpty) {
+                              return "Enter Your Password";
+                            }
+                            return null;
+                          },
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            hintText: "Password",
                           ),
                         ),
                       ),
@@ -185,41 +182,45 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        Container(
+                        SizedBox(
                           width: MediaQuery.of(context).size.width * 0.3,
                           child: Padding(
-                            padding: EdgeInsets.only(left: 25),
+                            padding: const EdgeInsets.only(left: 25),
                             child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
                               child: TextFormField(
                                 validator: (text) {
                                   if (text == null || text.isEmpty) {
                                     return "Enter Your Block";
                                   }
+                                  return null;
                                 },
                                 controller: _blockController,
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
+                                decoration: const InputDecoration(
                                   hintText: "Block",
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        Container(
+                        SizedBox(
                           width: MediaQuery.of(context).size.width * 0.7,
                           child: Padding(
-                            padding: EdgeInsets.only(right: 25),
+                            padding: const EdgeInsets.only(right: 25),
                             child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
                               child: TextFormField(
                                 validator: (text) {
                                   if (text == null || text.isEmpty) {
                                     return "Enter Your Street";
                                   }
+                                  return null;
                                 },
                                 controller: _streetController,
-                                decoration: InputDecoration(
+                                decoration: const InputDecoration(
                                   hintText: "Street",
                                 ),
                               ),
@@ -230,18 +231,19 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(height: 10),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25),
+                      padding: const EdgeInsets.symmetric(horizontal: 25),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: TextFormField(
                           validator: (text) {
-                            if (text == null || text.isEmpty) {
+                            if (text!.isEmpty) {
                               return "Enter Your City";
                             }
+                            return null;
                           },
                           controller: _cityController,
                           keyboardType: TextInputType.text,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             hintText: "City",
                           ),
                         ),
@@ -249,18 +251,19 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(height: 10),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25),
+                      padding: const EdgeInsets.symmetric(horizontal: 25),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: TextFormField(
                           validator: (text) {
                             if (text == null || text.isEmpty) {
                               return "Enter Your National ID";
                             }
+                            return null;
                           },
                           controller: _nationalIDController,
                           keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             hintText: "National ID",
                           ),
                         ),
@@ -268,21 +271,20 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(height: 10),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25),
-                      child: Container(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: TextFormField(
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return "Enter Your Phone Number";
-                              }
-                            },
-                            controller: _phoneNumberController,
-                            keyboardType: TextInputType.phone,
-                            decoration: InputDecoration(
-                              hintText: "Phone Number",
-                            ),
+                      padding: const EdgeInsets.symmetric(horizontal: 25),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: TextFormField(
+                          validator: (text) {
+                            if (text == null || text.isEmpty) {
+                              return "Enter Your Phone Number";
+                            }
+                            return null;
+                          },
+                          controller: _phoneNumberController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            hintText: "Phone Number",
                           ),
                         ),
                       ),

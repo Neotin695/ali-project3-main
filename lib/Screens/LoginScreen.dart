@@ -47,10 +47,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Lottie.network(
                       'https://assets5.lottiefiles.com/packages/lf20_KvK0ZJBQzu.json'),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
-                  Text(
+                  const Text(
                     "Wlcome back!",
                     style: TextStyle(
                       color: Colors.black,
@@ -58,50 +58,43 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 100),
+                  const SizedBox(height: 100),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25),
-                    child: Container(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: TextFormField(
-                          controller: _emilController,
-                          decoration: InputDecoration(
-                            hintText: "E-mail",
-                          ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextFormField(
+                        controller: _emilController,
+                        decoration: const InputDecoration(
+                          hintText: "E-mail",
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10,
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25),
-                    child: Container(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: TextFormField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            hintText: "Password",
-                          ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          hintText: "Password",
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   ElevatedButton(
                     onPressed: () async {
                         try {
-                          UserCredential userCredential =
-                          await FirebaseAuth.instance.signInWithEmailAndPassword(
-                            email: _emilController.text.trim(),
-                            password: _passwordController.text.trim(),
-                          );
+
+                          
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'user-not-found') {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -125,14 +118,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         }
                         Navigator.of(context).pushNamed('/');
                     },
-                    child: Text("sign in"),
+                    child: const Text("sign in"),
                   ),
-                  Text("OR"),
+                  const Text("OR"),
                   TextButton(
                     onPressed: () {
                       signupScreen();
                     },
-                    child: Text("Creat New Account?"),
+                    child: const Text("Creat New Account?"),
                   ),
                 ],
               ),
